@@ -29,8 +29,26 @@ SAMPLE_DATA_PATH = os.path.join(base_dir, "data", "API_IT.NET.USER.ZS_DS2_en_csv
 
 
 @app.route("/")
+@app.route("/index")
+@app.route("/api/index")
+@app.route("/api/index.py")
 def index():
     return render_template("index.html")
+
+
+@app.route("/manifest.json")
+def manifest():
+    """PWA 매니페스트 서빙"""
+    return app.send_static_file("manifest.json")
+
+
+@app.route("/sw.js")
+def service_worker():
+    """PWA 서비스 워커 서빙 (루트 스코프 헤더 허용)"""
+    response = app.send_static_file("sw.js")
+    response.headers["Content-Type"] = "application/javascript"
+    response.headers["Service-Worker-Allowed"] = "/"
+    return response
 
 
 @app.route("/api/analyze", methods=["POST"])

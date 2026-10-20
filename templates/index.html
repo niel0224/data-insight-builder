@@ -2,12 +2,28 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Data Insight Builder - AI 기반 데이터 분석 리포트</title>
+
+  <!-- PWA & Mobile Meta Tags -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0b0f19">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="DataInsight">
+  
+  <!-- iOS Safari Specific -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DataInsight">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/icon.svg') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <!-- Marked.js for markdown rendering -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <!-- Chart.js for data visualization -->
@@ -17,7 +33,48 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <div class="app-container">
+  <!-- 🔒 Security Lock Screen (Password: 0224) -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-card" id="authCard">
+      <div class="auth-icon-wrap">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h2>보안 인증</h2>
+      <p class="auth-desc">Data Insight Builder에 오신 것을 환영합니다.<br>접근을 위해 비밀번호(PIN)를 입력하세요.</p>
+      
+      <!-- PIN Display Dots -->
+      <div class="pin-display">
+        <span class="pin-dot" id="dot0"></span>
+        <span class="pin-dot" id="dot1"></span>
+        <span class="pin-dot" id="dot2"></span>
+        <span class="pin-dot" id="dot3"></span>
+      </div>
+
+      <!-- Hidden Real Input for physical keyboards -->
+      <input type="password" id="pinInput" maxlength="4" pattern="[0-9]*" inputmode="numeric" autocomplete="off" style="opacity: 0; position: absolute; pointer-events: none;">
+
+      <!-- Error Message -->
+      <div class="auth-error-msg" id="authErrorMsg"></div>
+
+      <!-- Touch Keypad (Optimized for Mobile/Touch) -->
+      <div class="keypad-grid">
+        <button type="button" class="key-btn" data-key="1">1</button>
+        <button type="button" class="key-btn" data-key="2">2</button>
+        <button type="button" class="key-btn" data-key="3">3</button>
+        <button type="button" class="key-btn" data-key="4">4</button>
+        <button type="button" class="key-btn" data-key="5">5</button>
+        <button type="button" class="key-btn" data-key="6">6</button>
+        <button type="button" class="key-btn" data-key="7">7</button>
+        <button type="button" class="key-btn" data-key="8">8</button>
+        <button type="button" class="key-btn" data-key="9">9</button>
+        <button type="button" class="key-btn key-action" id="btnKeyClear">C</button>
+        <button type="button" class="key-btn" data-key="0">0</button>
+        <button type="button" class="key-btn key-action" id="btnKeyBack"><i class="fa-solid fa-delete-left"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container" id="mainApp" style="filter: blur(8px); pointer-events: none;">
     <!-- Header -->
     <header class="navbar">
       <div class="logo">
@@ -25,13 +82,29 @@
         <span>Data Insight Builder</span>
       </div>
       <div class="nav-actions">
+        <!-- PWA Install Button (shown when prompt is available) -->
+        <button type="button" class="btn-install" id="btnInstallPwa" style="display: none;" title="앱으로 설치">
+          <i class="fa-solid fa-download"></i> <span class="hide-mobile">앱 설치</span>
+        </button>
         <button type="button" class="theme-toggle-btn" id="btnThemeToggle" title="테마 전환">
           <i class="fa-solid fa-moon" id="themeIcon"></i>
-          <span id="themeText">다크 모드</span>
+          <span id="themeText" class="hide-mobile">다크 모드</span>
         </button>
-        <div class="badge">Gemini Powered</div>
+        <button type="button" class="theme-toggle-btn" id="btnLockApp" title="잠금 화면으로">
+          <i class="fa-solid fa-lock"></i>
+        </button>
+        <div class="badge hide-mobile">Gemini Powered</div>
       </div>
     </header>
+
+    <!-- iOS Safari Install Guide Banner -->
+    <div class="ios-install-banner" id="iosInstallBanner" style="display: none;">
+      <div class="ios-banner-content">
+        <i class="fa-brands fa-apple apple-icon"></i>
+        <span>홈 화면에 앱으로 추가하려면 하단 <i class="fa-solid fa-arrow-up-from-bracket"></i> <b>공유</b> ➔ <b>'홈 화면에 추가'</b>를 탭하세요.</span>
+        <button type="button" class="btn-close-banner" id="btnCloseIosBanner">&times;</button>
+      </div>
+    </div>
 
     <!-- Main Content -->
     <main class="content">
@@ -45,7 +118,7 @@
       <section class="card upload-card">
         <div class="drop-zone" id="dropZone">
           <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-          <h3>CSV 파일을 드래그 앤 드롭하거나 클릭하여 선택하세요</h3>
+          <h3>CSV 파일을 드래그 앤 드롭하거나 터치하여 선택하세요</h3>
           <p>최대 15MB (.csv), 다양한 인코딩(UTF-8, CP949 등) 자동 감지</p>
           <input type="file" id="fileInput" accept=".csv" style="display: none;">
           <div class="upload-buttons">
@@ -164,7 +237,6 @@
               </div>
             </div>
           </div>
-        </div>
         </div>
       </section>
     </main>
