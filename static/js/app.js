@@ -69,8 +69,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (themeText) themeText.textContent = "다크 모드";
     }
 
-    // 테마 변경 시 활성화된 차트들의 축/텍스트 색상도 실시간 갱신
-    if (currentAnalysisData && currentAnalysisData.chart_data) {
+    // 테마 변경 시 활성화된 차트들의 축/텍스트 색상도 실시간 갱신 (리포트가 열려있을 때만)
+    if (currentAnalysisData && currentAnalysisData.chart_data && insightCard && insightCard.style.display !== "none") {
       renderCharts(currentAnalysisData.chart_data);
     }
   }
@@ -228,11 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       tableBody.appendChild(tr);
     });
-
-    // Render Charts
-    if (data.chart_data) {
-      renderCharts(data.chart_data);
-    }
 
     resultsContainer.style.display = "flex";
     resultsContainer.scrollIntoView({ behavior: "smooth" });
@@ -416,6 +411,11 @@ document.addEventListener("DOMContentLoaded", () => {
         insightContent.innerHTML = marked.parse(rawMarkdownInsight);
       } else {
         insightContent.textContent = rawMarkdownInsight;
+      }
+
+      // 리포트 생성 완료 후 차트 렌더링
+      if (currentAnalysisData && currentAnalysisData.chart_data) {
+        renderCharts(currentAnalysisData.chart_data);
       }
 
       insightCard.style.display = "block";

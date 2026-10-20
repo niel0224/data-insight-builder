@@ -422,10 +422,20 @@ body {
   }
 }
 
+.report-charts-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 2rem 0 1.5rem 0;
+}
+
 .chart-card {
   display: flex;
   flex-direction: column;
   padding: 1.25rem;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .chart-card.full-width {
