@@ -26,9 +26,45 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCopyReport = document.getElementById("btnCopyReport");
   const btnPrintReport = document.getElementById("btnPrintReport");
 
+  // Theme Toggle Elements
+  const btnThemeToggle = document.getElementById("btnThemeToggle");
+  const themeIcon = document.getElementById("themeIcon");
+  const themeText = document.getElementById("themeText");
+
   // State
   let currentAnalysisData = null;
   let rawMarkdownInsight = "";
+
+  // Theme Management (Default: Dark)
+  function applyTheme(theme) {
+    if (theme === "light") {
+      document.body.classList.add("light-theme");
+      if (themeIcon) {
+        themeIcon.classList.remove("fa-moon");
+        themeIcon.classList.add("fa-sun");
+      }
+      if (themeText) themeText.textContent = "라이트 모드";
+    } else {
+      document.body.classList.remove("light-theme");
+      if (themeIcon) {
+        themeIcon.classList.remove("fa-sun");
+        themeIcon.classList.add("fa-moon");
+      }
+      if (themeText) themeText.textContent = "다크 모드";
+    }
+  }
+
+  const savedTheme = localStorage.getItem("app-theme") || "dark";
+  applyTheme(savedTheme);
+
+  if (btnThemeToggle) {
+    btnThemeToggle.addEventListener("click", () => {
+      const isLight = document.body.classList.contains("light-theme");
+      const nextTheme = isLight ? "dark" : "light";
+      localStorage.setItem("app-theme", nextTheme);
+      applyTheme(nextTheme);
+    });
+  }
 
   // 1. File Upload / Select Events
   btnSelectFile.addEventListener("click", (e) => {
