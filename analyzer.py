@@ -110,6 +110,64 @@ def analyze_dataframe(df: pd.DataFrame) -> dict:
             if not s.empty:
                 summary_text += f"- {col}: 평균={s.mean():.2f}, 최소={s.min():.2f}, 최대={s.max():.2f}, 중앙값={s.median():.2f}\n"
 
+    # 시각화 차트용 데이터 구성
+    # 1) 데이터 완성도 (유효 vs 결측)
+    valid_cells = max(0, total_cells - missing_cells)
+    chart_health = {
+        "labels": ["유효 데이터", "결측치"],
+        "data": [valid_cells, missing_cells],
+        "percentages": [round((valid_cells / total_cells * 100), 1) if total_cells > 0 else 100, missing_pct]
+    }
+
+    # 2) 주요 수치형 변수 비교 (유효 데이터가 가장 풍부한 대표 컬럼 최대 6~8개)
+    chart_numeric = {
+        "labels": [],
+        "means": [],
+        "medians": []
+    }
+    
+    # 각 수치형 컬럼의 유효값 개수 기준 정렬
+    valid_numeric_candidates = []
+    for col in numeric_cols:
+        s = df[col].dropna()
+        if len(s) > 0 and s.nunique() > 1:
+            valid_numeric_candidates.append((col, len(s), s))
+            
+    # 유효 데이터가 많은 상위 6개 컬럼을 원래 컬럼 순서대로 정렬
+    top_cols_set = set([x[0] for x in valid_numeric_candidates[:6]])
+    ordered_cols = [c for c in numeric_cols if c in top_cols_set]
+    
+    for col in ordered_cols:
+        s = df[col].dropna()
+        chart_numeric["labels"].append(str(col))
+        chart_numeric["means"].append(round(float(s.mean()), 2))
+        chart_numeric["medians"].append(round(float(s.median()), 2))
+
+    # 3) 주요 범주형 분포 (의미 있는 분포를 가진 대표 컬럼 선별)
+    chart_categories = []
+    valid_cat_candidates = []
+    for col in categorical_cols:
+        s = df[col].dropna()
+        n_unique = s.nunique()
+        if 2 <= n_unique <= 20:  # 너무 적거나 너무 많은 유니크값 제외
+            valid_cat_candidates.append((col, n_unique, s))
+
+    # 우선 2~8개 사이의 적절한 카테고리를 우선순위로 정렬
+    valid_cat_candidates.sort(key=lambda x: (abs(x[1] - 4)))
+    for col, n_unique, s in valid_cat_candidates[:2]:
+        val_counts = s.value_counts().head(8)
+        chart_categories.append({
+            "column_name": str(col),
+            "labels": [str(k) for k in val_counts.index],
+            "data": [int(v) for v in val_counts.values]
+        })
+
+    chart_data = {
+        "health": chart_health,
+        "numeric": chart_numeric,
+        "categories": chart_categories
+    }
+
     return {
         "total_rows": total_rows,
         "total_cols": total_cols,
@@ -119,5 +177,6 @@ def analyze_dataframe(df: pd.DataFrame) -> dict:
         "categorical_cols_count": len(categorical_cols),
         "columns": columns_info,
         "preview": preview_data,
-        "summary_text": summary_text
+        "summary_text": summary_text,
+        "chart_data": chart_data
     }

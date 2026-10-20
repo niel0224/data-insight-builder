@@ -10,6 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Marked.js for markdown rendering -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -82,6 +84,45 @@
           <div class="kpi-card">
             <div class="kpi-title"><i class="fa-solid fa-tags"></i> 컬럼 구성</div>
             <div class="kpi-value" id="kpiCols">수치 0 / 범주 0</div>
+          </div>
+        </div>
+
+        <!-- Charts Dashboard Section -->
+        <div class="charts-section" id="chartsSection">
+          <div class="section-title">
+            <h3><i class="fa-solid fa-chart-pie"></i> 데이터 시각화 분석 대시보드</h3>
+            <span class="subtext">업로드된 데이터셋의 주요 패턴 및 분포 그래프</span>
+          </div>
+          <div class="charts-grid">
+            <!-- Chart 1: Data Health -->
+            <div class="card chart-card">
+              <div class="chart-header">
+                <h4><i class="fa-solid fa-shield-halved"></i> 데이터 완성도 (결측치 비율)</h4>
+              </div>
+              <div class="chart-container">
+                <canvas id="chartDataHealth"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart 2: Category Distribution -->
+            <div class="card chart-card">
+              <div class="chart-header">
+                <h4 id="categoryChartTitle"><i class="fa-solid fa-chart-column"></i> 주요 범주형 속성 분포</h4>
+              </div>
+              <div class="chart-container">
+                <canvas id="chartCategory"></canvas>
+              </div>
+            </div>
+
+            <!-- Chart 3: Numeric Metrics Summary -->
+            <div class="card chart-card full-width">
+              <div class="chart-header">
+                <h4><i class="fa-solid fa-chart-simple"></i> 주요 수치 지표 평균값 비교</h4>
+              </div>
+              <div class="chart-container wide">
+                <canvas id="chartNumericSummary"></canvas>
+              </div>
+            </div>
           </div>
         </div>
 

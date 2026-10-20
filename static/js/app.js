@@ -35,6 +35,22 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentAnalysisData = null;
   let rawMarkdownInsight = "";
 
+  // Chart Instances
+  const charts = {
+    health: null,
+    category: null,
+    numeric: null,
+  };
+
+  function getThemeColors() {
+    const isLight = document.body.classList.contains("light-theme");
+    return {
+      textColor: isLight ? "#475569" : "#94a3b8",
+      gridColor: isLight ? "#e2e8f0" : "#27354c",
+      cardBg: isLight ? "#ffffff" : "#1a2336",
+    };
+  }
+
   // Theme Management (Default: Dark)
   function applyTheme(theme) {
     if (theme === "light") {
@@ -51,6 +67,11 @@ document.addEventListener("DOMContentLoaded", () => {
         themeIcon.classList.add("fa-moon");
       }
       if (themeText) themeText.textContent = "다크 모드";
+    }
+
+    // 테마 변경 시 활성화된 차트들의 축/텍스트 색상도 실시간 갱신
+    if (currentAnalysisData && currentAnalysisData.chart_data) {
+      renderCharts(currentAnalysisData.chart_data);
     }
   }
 
@@ -208,8 +229,160 @@ document.addEventListener("DOMContentLoaded", () => {
       tableBody.appendChild(tr);
     });
 
+    // Render Charts
+    if (data.chart_data) {
+      renderCharts(data.chart_data);
+    }
+
     resultsContainer.style.display = "flex";
     resultsContainer.scrollIntoView({ behavior: "smooth" });
+  }
+
+  // Helper: Render Dynamic Charts using Chart.js
+  function renderCharts(chartData) {
+    if (!window.Chart || !chartData) return;
+    const colors = getThemeColors();
+
+    // 1. Data Health (Doughnut Chart)
+    if (charts.health) charts.health.destroy();
+    const ctxHealth = document.getElementById("chartDataHealth");
+    if (ctxHealth && chartData.health) {
+      charts.health = new Chart(ctxHealth, {
+        type: "doughnut",
+        data: {
+          labels: chartData.health.labels,
+          datasets: [{
+            data: chartData.health.data,
+            backgroundColor: ["#6366f1", "#f43f5e"],
+            borderWidth: 0,
+            hoverOffset: 4,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { color: colors.textColor, font: { family: "Pretendard" } },
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const val = context.parsed.toLocaleString();
+                  const pct = chartData.health.percentages[context.dataIndex];
+                  return ` ${context.label}: ${val}개 (${pct}%)`;
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+
+    // 2. Category Distribution Chart
+    if (charts.category) charts.category.destroy();
+    const ctxCategory = document.getElementById("chartCategory");
+    const categoryTitle = document.getElementById("categoryChartTitle");
+    const categories = chartData.categories || [];
+
+    if (ctxCategory) {
+      if (categories.length > 0) {
+        const cat = categories[0];
+        if (categoryTitle) {
+          categoryTitle.innerHTML = `<i class="fa-solid fa-chart-column"></i> '${cat.column_name}' 속성 분포`;
+        }
+        const palette = ["#818cf8", "#a78bfa", "#38bdf8", "#34d399", "#fbbf24", "#f87171", "#c084fc", "#93c5fd"];
+        const isDoughnut = cat.labels.length <= 4;
+
+        charts.category = new Chart(ctxCategory, {
+          type: isDoughnut ? "doughnut" : "bar",
+          data: {
+            labels: cat.labels,
+            datasets: [{
+              label: "인원 / 건수",
+              data: cat.data,
+              backgroundColor: isDoughnut ? palette.slice(0, cat.labels.length) : "#818cf8",
+              borderRadius: isDoughnut ? 0 : 6,
+              borderWidth: 0,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: isDoughnut,
+                position: "bottom",
+                labels: { color: colors.textColor, font: { family: "Pretendard" } },
+              },
+            },
+            scales: isDoughnut ? {} : {
+              x: {
+                ticks: { color: colors.textColor, font: { family: "Pretendard" } },
+                grid: { color: colors.gridColor },
+              },
+              y: {
+                ticks: { color: colors.textColor, font: { family: "Pretendard" } },
+                grid: { color: colors.gridColor },
+              },
+            },
+          },
+        });
+      } else {
+        if (categoryTitle) {
+          categoryTitle.innerHTML = `<i class="fa-solid fa-chart-column"></i> 범주형 속성 없음`;
+        }
+      }
+    }
+
+    // 3. Numeric Comparison Bar Chart
+    if (charts.numeric) charts.numeric.destroy();
+    const ctxNumeric = document.getElementById("chartNumericSummary");
+    const numData = chartData.numeric;
+
+    if (ctxNumeric && numData && numData.labels.length > 0) {
+      charts.numeric = new Chart(ctxNumeric, {
+        type: "bar",
+        data: {
+          labels: numData.labels,
+          datasets: [
+            {
+              label: "평균값 (Mean)",
+              data: numData.means,
+              backgroundColor: "#6366f1",
+              borderRadius: 6,
+            },
+            {
+              label: "중앙값 (Median)",
+              data: numData.medians,
+              backgroundColor: "#a855f7",
+              borderRadius: 6,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "top",
+              labels: { color: colors.textColor, font: { family: "Pretendard" } },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { color: colors.textColor, font: { family: "Pretendard" } },
+              grid: { color: colors.gridColor },
+            },
+            y: {
+              ticks: { color: colors.textColor, font: { family: "Pretendard" } },
+              grid: { color: colors.gridColor },
+            },
+          },
+        },
+      });
+    }
   }
 
   // 6. Generate AI Insight
