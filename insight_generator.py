@@ -21,7 +21,7 @@ def generate_data_insight(summary_dict: dict, user_question: str = None) -> str:
     구조화된 데이터 인사이트 리포트를 생성합니다.
     """
     client = get_gemini_client()
-    model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+    model_name = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
     # 프롬프트 구성
     summary_text = summary_dict.get("summary_text", "")

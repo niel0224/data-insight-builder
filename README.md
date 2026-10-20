@@ -15,7 +15,7 @@
    - 전체 행/열 수, 결측치 수 및 결측 비율, 수치형/범주형 컬럼 분포
    - 상위 5개 행 데이터 미리보기 테이블 제공
 3. **Google Gemini 기반 AI 인사이트 리포트 생성**
-   - 최신 `google-genai` SDK 기반 `gemini-3.5-flash-lite` (또는 `gemini-2.5-flash`) 모델 연동
+   - 최신 `google-genai` SDK 기반 `gemini-3.1-flash-lite` 모델 연동
    - 사용자 맞춤형 추가 질문 및 심층 분석 요청 지원
    - 데이터 품질 진단, 핵심 패턴/트렌드, 특이점 및 잠재 리스크, 실천 권고사항(Actionable items) 도출
 4. **모던 UI/UX**
@@ -28,7 +28,7 @@
 
 - **Backend**: Python 3.x, Flask, Pandas, google-genai, python-dotenv
 - **Frontend**: HTML5, Modern CSS, Vanilla JavaScript, Marked.js, FontAwesome
-- **AI Model**: Google Gemini (gemini-3.5-flash-lite / gemini-2.5-flash)
+- **AI Model**: Google Gemini (`gemini-3.1-flash-lite`)
 
 ---
 
@@ -47,7 +47,7 @@ pip install -r requirements.txt
 `.env` 파일에 발급받은 Gemini API 키를 입력합니다.
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-3.5-flash-lite
+GEMINI_MODEL=gemini-3.1-flash-lite
 FLASK_DEBUG=true
 MAX_UPLOAD_MB=15
 ```
