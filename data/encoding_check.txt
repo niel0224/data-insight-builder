@@ -1,0 +1,11 @@
+=== 맨 앞 10바이트 (16진수) ===
+EF BB BF 22 44 61 74 61 20 53
+
+BOM: UTF-8 BOM 있음 (EF BB BF)
+
+=== 인코딩별 읽기 시도 ===
+  utf-8-sig: 성공 -> '"Data Source","World Development Indicators",\n\n"Last Updated'
+  utf-8: 성공 -> '\ufeff"Data Source","World Development Indicators",\n\n"Last Update'
+  cp949: 실패 -> 'cp949' codec can't decode byte 0xbf in position 2: illegal multibyte sequence
+  euc-kr: 실패 -> 'euc_kr' codec can't decode byte 0xbf in position 2: illegal multibyte sequence
+  latin-1: 실패 -> 'cp949' codec can't encode character '\xef' in position 18: illegal multibyte sequence

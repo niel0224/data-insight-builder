@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Insight Builder - AI 기반 데이터 분석 리포트</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Marked.js for markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="navbar">
+      <div class="logo">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Data Insight Builder</span>
+      </div>
+      <div class="badge">Gemini Powered</div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content">
+      <!-- Hero / Introduction -->
+      <section class="hero-section">
+        <h1>데이터를 업로드하고 <span>AI 전문 분석 리포트</span>를 즉시 확인하세요</h1>
+        <p>복잡한 CSV 데이터를 통계적으로 자동 요약하고, 비즈니스 관점의 핵심 인사이트와 실행 권고사항을 도출합니다.</p>
+      </section>
+
+      <!-- Upload & Action Section -->
+      <section class="card upload-card">
+        <div class="drop-zone" id="dropZone">
+          <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+          <h3>CSV 파일을 드래그 앤 드롭하거나 클릭하여 선택하세요</h3>
+          <p>최대 15MB (.csv), 다양한 인코딩(UTF-8, CP949 등) 자동 감지</p>
+          <input type="file" id="fileInput" accept=".csv" style="display: none;">
+          <div class="upload-buttons">
+            <button type="button" class="btn btn-primary" id="btnSelectFile">
+              <i class="fa-solid fa-folder-open"></i> 파일 선택
+            </button>
+            <button type="button" class="btn btn-secondary" id="btnLoadSample">
+              <i class="fa-solid fa-database"></i> 샘플 데이터로 체험하기
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Loading Indicator -->
+      <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="spinner"></div>
+        <p id="loadingText">데이터를 분석하는 중입니다...</p>
+      </div>
+
+      <!-- Analysis Results Section (Hidden by default) -->
+      <section class="results-container" id="resultsContainer" style="display: none;">
+        <!-- KPI Summary Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-title"><i class="fa-regular fa-file"></i> 파일명</div>
+            <div class="kpi-value text-sm" id="kpiFilename">-</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title"><i class="fa-solid fa-table-cells"></i> 데이터 규모</div>
+            <div class="kpi-value" id="kpiSize">0행 × 0열</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title"><i class="fa-solid fa-triangle-exclamation"></i> 결측치</div>
+            <div class="kpi-value" id="kpiMissing">0% (0개)</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title"><i class="fa-solid fa-tags"></i> 컬럼 구성</div>
+            <div class="kpi-value" id="kpiCols">수치 0 / 범주 0</div>
+          </div>
+        </div>
+
+        <!-- Data Preview Table -->
+        <div class="card preview-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-table"></i> 데이터 미리보기 (상위 5개 행)</h3>
+          </div>
+          <div class="table-wrapper">
+            <table id="previewTable">
+              <thead><tr id="tableHeaders"></tr></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- AI Insight Generation Box -->
+        <div class="card ai-prompt-card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-wand-magic-sparkles"></i> AI 심층 인사이트 리포트 생성</h3>
+          </div>
+          <div class="prompt-body">
+            <label for="userQuestion">특별히 중점적으로 분석하고 싶은 질문이나 요구사항이 있나요? (선택사항)</label>
+            <textarea id="userQuestion" placeholder="예: 주요 국가별 성장 추세 차이점과 한국의 위치를 중점적으로 분석해줘." rows="2"></textarea>
+            <button class="btn btn-gradient" id="btnGenerateInsight">
+              <i class="fa-solid fa-sparkles"></i> Gemini AI 인사이트 리포트 생성
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Report Result Area -->
+        <div class="card insight-card" id="insightCard" style="display: none;">
+          <div class="card-header insight-header">
+            <h3><i class="fa-solid fa-file-invoice"></i> AI 분석 리포트</h3>
+            <div class="action-buttons">
+              <button class="btn-sm" id="btnCopyReport"><i class="fa-regular fa-copy"></i> 복사</button>
+              <button class="btn-sm" id="btnPrintReport"><i class="fa-solid fa-print"></i> 인쇄</button>
+            </div>
+          </div>
+          <div class="markdown-body" id="insightContent"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Data Insight Builder &copy; 2026. Powered by Google Gemini &amp; Flask.</p>
+    </footer>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
